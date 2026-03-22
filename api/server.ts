@@ -39,7 +39,7 @@ async function parseBody(req: import("node:http").IncomingMessage): Promise<stri
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-const server = createServer(async (req, res) => {
+const handler = async (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse) => {
   const origin = req.headers.origin;
   const headers = { "Content-Type": "application/json", ...corsHeaders(origin) };
 
@@ -49,14 +49,16 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
-  if (url.pathname === "/health") {
+  // Soporte para rutas de Vercel y locales
+  const urlPath = req.url ? req.url.split("?")[0] : "/";
+
+  if (urlPath === "/health" || urlPath === "/api/health") {
     res.writeHead(200, headers);
     res.end(JSON.stringify({ ok: true, service: "alebrije-dispersor" }));
     return;
   }
 
-  if (url.pathname === "/api/dispersar" && req.method === "POST") {
+  if (urlPath === "/api/dispersar" && req.method === "POST") {
     try {
       const body = await parseBody(req);
       const { csv } = JSON.parse(body || "{}");
@@ -89,11 +91,21 @@ const server = createServer(async (req, res) => {
 
   res.writeHead(404, headers);
   res.end(JSON.stringify({ error: "Not found" }));
-});
+};
 
-server.listen(PORT, () => {
-  console.log(`\n📡 API dispersor: http://localhost:${PORT}`);
-  console.log(`   POST /api/dispersar  — dispersión desde CSV`);
-  console.log(`   GET  /health         — health check`);
-  console.log(`   CORS: nomillar.vercel.app\n`);
-});
+export default handler;
+
+// Ejecutar servidor si se llama directamente (p. ej. en local con `npm run backend`)
+if (require.main === module || process.env.NODE_ENV !== "production") {
+  const isVercelEnvironment = process.env.VERCEL === "1";
+  
+  if (!isVercelEnvironment) {
+    const server = createServer(handler);
+    server.listen(PORT, () => {
+      console.log(`\n📡 API dispersor: http://localhost:${PORT}`);
+      console.log(`   POST /api/dispersar  — dispersión desde CSV`);
+      console.log(`   GET  /health         — health check`);
+      console.log(`   CORS: nomillar.vercel.app\n`);
+    });
+  }
+}
