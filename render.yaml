@@ -1,0 +1,15 @@
+# Despliegue del API en Render.com (Web Service).
+# New → Blueprint → conecta este repo y define en el panel las variables:
+# ADMIN_SECRET_KEY, PAYROLL_STORE_KEY, RECEIPT_DRY_RUN=true, etc.
+# La URL pública (p. ej. https://dispersor-xxx.onrender.com) va en Vercel como DISPERSOR_API_URL.
+services:
+  - type: web
+    name: dispersor-nomina-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

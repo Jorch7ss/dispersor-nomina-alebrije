@@ -17,7 +17,10 @@ import { dispersarDesdeCsv } from "../alebrije-flow/src/dispersar-direct";
 import { getBatch } from "../alebrije-flow/src/payroll-store";
 import { verifyCommitment } from "../alebrije-flow/src/commitment";
 
-const PORT = parseInt(process.env.API_PORT ?? "3001", 10);
+const PORT = parseInt(
+  process.env.PORT ?? process.env.API_PORT ?? "3001",
+  10
+);
 const AUDITOR_TOKEN = process.env.AUDITOR_TOKEN;
 const STELLAR_EXPERT_TESTNET = "https://stellar.expert/explorer/testnet/tx";
 
