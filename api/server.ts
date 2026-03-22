@@ -30,10 +30,19 @@ const CORS_ORIGINS = [
   "http://127.0.0.1:3000",
 ];
 
+function isAllowedOrigin(origin: string): boolean {
+  if (CORS_ORIGINS.some((o) => origin.startsWith(o.replace(/\/$/, "")))) return true;
+  try {
+    const u = new URL(origin);
+    return u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
 function corsHeaders(origin: string | undefined): Record<string, string> {
-  const allow = origin && CORS_ORIGINS.some((o) => origin.startsWith(o.replace(/\/$/, "")))
-    ? origin
-    : CORS_ORIGINS[0];
+  const allow =
+    origin && isAllowedOrigin(origin) ? origin : CORS_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
